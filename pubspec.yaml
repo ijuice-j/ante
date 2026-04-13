@@ -41,6 +41,9 @@ dependencies:
   cached_network_image: ^3.4.1
   flutter_staggered_grid_view: ^0.7.0
   photo_view: ^0.15.0
+  shared_preferences: ^2.5.5
+  google_fonts: ^8.0.2
+  flutter_svg: ^2.2.4
 
 dev_dependencies:
   flutter_test:
@@ -63,6 +66,26 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - assets/images/ic_asterisk.svg
+    - assets/images/ic_ante.svg
+
+  fonts:
+    - family: Gilroy
+      fonts:
+        - asset: assets/font/Gilroy/Gilroy-Light.ttf
+          weight: 300
+        - asset: assets/font/Gilroy/Gilroy-Regular.ttf
+          weight: 400
+        - asset: assets/font/Gilroy/Gilroy-Medium.ttf
+          weight: 500
+        - asset: assets/font/Gilroy/Gilroy-SemiBold.ttf
+          weight: 600
+        - asset: assets/font/Gilroy/Gilroy-Bold.ttf
+          weight: 700
+        - asset: assets/font/Gilroy/Gilroy-Heavy.ttf
+          weight: 900
 
   # To add assets to your application, add an assets section, like this:
   # assets:

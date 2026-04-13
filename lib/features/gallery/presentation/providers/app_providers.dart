@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Which zoom approach to show on the Home screen.
 /// Session-only state — resets to 3 on every app launch.
@@ -27,6 +28,33 @@ class Avatar {
   final String letter;
   final Color color;
   const Avatar({required this.letter, required this.color});
+}
+
+/// Which variant of the "custom permission message" screen to show,
+/// based on which dev-note CTA the user tapped. Not persisted.
+enum PermissionMessageVariant { cool, chill }
+
+/// Persisted flag that flips to true the first time the user interacts
+/// with the Dev Note screen (taps either CTA). Once true, subsequent
+/// cold starts skip the Dev Note and the Custom Permission Message and
+/// go straight to the Permission screen when access is denied.
+final devNoteSeenProvider =
+    AsyncNotifierProvider<DevNoteSeenNotifier, bool>(DevNoteSeenNotifier.new);
+
+class DevNoteSeenNotifier extends AsyncNotifier<bool> {
+  static const _key = 'dev_note_seen';
+
+  @override
+  Future<bool> build() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_key) ?? false;
+  }
+
+  Future<void> markSeen() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_key, true);
+    state = const AsyncValue.data(true);
+  }
 }
 
 final avatarProvider = Provider<Avatar>((ref) {

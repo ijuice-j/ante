@@ -65,8 +65,48 @@ class _PhotoViewerPageState extends State<PhotoViewerPage> {
     });
   }
 
+  // ---------------- detail formatting ----------------
+
+  static const _months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+
+  String _formatDate(DateTime d) {
+    return '${_months[d.month - 1]} ${d.day}, ${d.year}';
+  }
+
+  String _formatTime(DateTime d) {
+    final h12 = d.hour % 12 == 0 ? 12 : d.hour % 12;
+    final m = d.minute.toString().padLeft(2, '0');
+    final ampm = d.hour < 12 ? 'AM' : 'PM';
+    return '$h12:$m $ampm';
+  }
+
+  String _formatDimensions(Photo p) {
+    if (p.width <= 0 || p.height <= 0) return '';
+    return '${p.width} × ${p.height}';
+  }
+
+  String _formatDuration(Duration d) {
+    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    if (d.inHours > 0) return '${d.inHours}:$m:$s';
+    return '$m:$s';
+  }
+
+  String _formatSubtitle(Photo p) {
+    final parts = <String>[_formatTime(p.createDateTime)];
+    final dims = _formatDimensions(p);
+    if (dims.isNotEmpty) parts.add(dims);
+    if (p.isVideo) parts.add(_formatDuration(p.duration));
+    return parts.join(' · ');
+  }
+
   @override
   Widget build(BuildContext context) {
+    final photo = widget.photos[_currentIndex];
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -82,15 +122,59 @@ class _PhotoViewerPageState extends State<PhotoViewerPage> {
           backgroundColor: Colors.black.withValues(alpha: 0.35),
           foregroundColor: Colors.white,
           elevation: 0,
-          centerTitle: true,
-          title: Text(
-            '${_currentIndex + 1} / ${widget.photos.length}',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
+          centerTitle: false,
+          titleSpacing: 4,
+          toolbarHeight: 64,
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _formatDate(photo.createDateTime),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                _formatSubtitle(photo),
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '${_currentIndex + 1} / ${widget.photos.length}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
         body: PhotoViewGallery.builder(
           pageController: _pageController,
