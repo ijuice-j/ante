@@ -78,6 +78,7 @@ flutter:
     - assets/images/e2.svg
     - assets/images/e3.svg
     - assets/images/e4.svg
+    - assets/images/img_sign.png
 
   fonts:
     - family: Gilroy
