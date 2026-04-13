@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../providers/app_providers.dart';
 import '../providers/gallery_providers.dart';
@@ -22,7 +22,7 @@ class SplashScreen extends ConsumerStatefulWidget {
 
 class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
-  static const _minDisplay = Duration(milliseconds: 1400);
+  static const _minDisplay = Duration(seconds: 2);
 
   late final AnimationController _fadeCtl;
 
@@ -51,21 +51,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     // Always honor the minimum display duration.
     final minDelay = Future<void>.delayed(_minDisplay);
 
-    // Pre-download every Poppins weight the Dev Note screen uses so we
-    // don't see a fallback-font flash on first launch. Runs in parallel
-    // with everything else.
-    final fontsLoaded = GoogleFonts.pendingFonts([
-      GoogleFonts.poppins(fontWeight: FontWeight.w300),
-      GoogleFonts.poppins(fontWeight: FontWeight.w500),
-      GoogleFonts.poppins(fontWeight: FontWeight.w600),
-      GoogleFonts.poppins(fontWeight: FontWeight.w800),
-      GoogleFonts.poppins(fontWeight: FontWeight.w900),
-    ]);
+    // Precache the signature PNG shown on the dev note so it's decoded
+    // and in the image cache before that screen mounts. Local asset,
+    // no network — safe to await alongside minDelay. `.catchError`
+    // guards against the splash ever blocking on a precache failure.
+    final signPrecache = precacheImage(
+      const AssetImage('assets/images/img_sign.png'),
+      context,
+    ).catchError((_) {});
 
     final devNoteSeen = await ref.read(devNoteSeenProvider.future);
 
     // On a true first launch (dev note not yet seen), don't call
-    // `photo_manager` at all — `requestPermissionExtend` would pop the
+    // `photo_manager` at all. `requestPermissionExtend` would pop the
     // OS permission dialog during the splash, before the user ever sees
     // the dev note. The real request happens later in
     // AskingPermissionScreen.
@@ -79,7 +77,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       status = ref.read(permissionStatusProvider);
     }
 
-    await Future.wait([minDelay, fontsLoaded]);
+    await Future.wait([minDelay, signPrecache]);
     if (!mounted) return;
 
     if (status == PermissionStatus.granted ||
@@ -100,15 +98,24 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFFEA00),
-      body: Center(
-        child: FadeTransition(
-          opacity: CurvedAnimation(parent: _fadeCtl, curve: Curves.easeOut),
-          child: SvgPicture.asset(
-            'assets/images/ic_ante.svg',
-            width: 120,
-            height: 120,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFFFEA00),
+        body: Center(
+          child: FadeTransition(
+            opacity: CurvedAnimation(parent: _fadeCtl, curve: Curves.easeOut),
+            child: SvgPicture.asset(
+              'assets/images/ic_ante.svg',
+              width: 120,
+              height: 120,
+            ),
           ),
         ),
       ),
