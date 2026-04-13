@@ -44,6 +44,8 @@ dependencies:
   shared_preferences: ^2.5.5
   google_fonts: ^8.0.2
   flutter_svg: ^2.2.4
+  url_launcher: ^6.3.1
+  package_info_plus: ^8.1.2
 
 dev_dependencies:
   flutter_test:
@@ -70,6 +72,12 @@ flutter:
   assets:
     - assets/images/ic_asterisk.svg
     - assets/images/ic_ante.svg
+    - assets/images/ic_settings.svg
+    - assets/images/ic_back.svg
+    - assets/images/e1.svg
+    - assets/images/e2.svg
+    - assets/images/e3.svg
+    - assets/images/e4.svg
 
   fonts:
     - family: Gilroy

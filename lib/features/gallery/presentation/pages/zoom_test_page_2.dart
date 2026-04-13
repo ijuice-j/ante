@@ -254,13 +254,20 @@ class _ZoomTestPage2State extends State<ZoomTestPage2>
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
               'Approach 2 · fixed 7-col canvas, checkpoint lock',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
             ),
             Text(
               'Visible ≈$effective  ×${_scale.toStringAsFixed(2)}  locked: $_visibleN',
@@ -268,7 +275,6 @@ class _ZoomTestPage2State extends State<ZoomTestPage2>
             ),
           ],
         ),
-        backgroundColor: Colors.black,
       ),
       body: RawGestureDetector(
         gestures: <Type, GestureRecognizerFactory>{

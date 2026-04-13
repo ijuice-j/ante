@@ -293,13 +293,20 @@ class _ZoomTestPageState extends State<ZoomTestPage>
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
               'Approach 1 · stacked N-col overlay',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
             ),
             Text(
               _overlayVisible
@@ -309,7 +316,6 @@ class _ZoomTestPageState extends State<ZoomTestPage>
             ),
           ],
         ),
-        backgroundColor: Colors.black,
       ),
       body: RawGestureDetector(
         gestures: <Type, GestureRecognizerFactory>{

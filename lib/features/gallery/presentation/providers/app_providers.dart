@@ -34,6 +34,19 @@ class Avatar {
 /// based on which dev-note CTA the user tapped. Not persisted.
 enum PermissionMessageVariant { cool, chill }
 
+/// Session-only flag for "developer mode". Flipped to true after the
+/// user taps the build version 7 times on the Settings page. Resets on
+/// every cold start — deliberately not persisted, per spec.
+final devModeProvider =
+    NotifierProvider<DevModeNotifier, bool>(DevModeNotifier.new);
+
+class DevModeNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void enable() => state = true;
+}
+
 /// Persisted flag that flips to true the first time the user interacts
 /// with the Dev Note screen (taps either CTA). Once true, subsequent
 /// cold starts skip the Dev Note and the Custom Permission Message and

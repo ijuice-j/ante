@@ -11,8 +11,14 @@ import '../providers/app_providers.dart';
 /// prompt. Tapping either CTA flips `devNoteSeenProvider` → true and
 /// routes to the custom permission message (variant depends on the
 /// button).
+///
+/// When [readOnly] is true, the screen is being viewed from the Settings
+/// page — in that mode a back button replaces the CTAs at the top and the
+/// bottom CTAs are hidden.
 class DevNoteScreen extends ConsumerWidget {
-  const DevNoteScreen({super.key});
+  const DevNoteScreen({super.key, this.readOnly = false});
+
+  final bool readOnly;
 
   static const _bgColor = Color(0xFFF1F1F1);
   static const _ctaColor = Color(0xFFFFEA00);
@@ -48,13 +54,22 @@ class DevNoteScreen extends ConsumerWidget {
             child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Top: ante mascot icon on the right.
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-
-                ],
-              ),
+              // Top row. Empty by default; in read-only mode we surface a
+              // back button here so the user can return to Settings.
+              if (readOnly)
+                Row(
+                  children: [
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => context.pop(),
+                      child: SvgPicture.asset(
+                        'assets/images/ic_back.svg',
+                        width: 20,
+                        height: 20,
+                      ),
+                    ),
+                  ],
+                ),
               const SizedBox(height: 24),
 
               // Scrollable note body.
@@ -108,7 +123,7 @@ class DevNoteScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        "To switch to the Masonry layout, tap the settings icon at the top of the home screen and toggle it on",
+                        "To switch to the Masonry layout, tap the settings icon at the top of the home screen and toggle it on.",
                         style: _bodyStyle(),
                       ),
                       // const SizedBox(height: 18),    Text(
@@ -141,23 +156,24 @@ class DevNoteScreen extends ConsumerWidget {
                 ),
               ),
 
-              const SizedBox(height: 12),
-
-              // CTAs.
-              _CtaButton(
-                label: 'Cool mahn',
-                color: _ctaColor,
-                onTap: () =>
-                    _finish(context, ref, PermissionMessageVariant.cool),
-              ),
-              const SizedBox(height: 8),
-              _CtaButton(
-                label: 'Stfu and let me see the app!',
-                color: _secondaryCtaColor,
-                borderColor: _secondaryCtaBorder,
-                onTap: () =>
-                    _finish(context, ref, PermissionMessageVariant.chill),
-              ),
+              // CTAs (first-run only — hidden when viewed from Settings).
+              if (!readOnly) ...[
+                const SizedBox(height: 12),
+                _CtaButton(
+                  label: 'Cool mahn',
+                  color: _ctaColor,
+                  onTap: () =>
+                      _finish(context, ref, PermissionMessageVariant.cool),
+                ),
+                const SizedBox(height: 8),
+                _CtaButton(
+                  label: 'Stfu and let me see the app!',
+                  color: _secondaryCtaColor,
+                  borderColor: _secondaryCtaBorder,
+                  onTap: () =>
+                      _finish(context, ref, PermissionMessageVariant.chill),
+                ),
+              ],
             ],
           ),
         ),

@@ -61,9 +61,14 @@ class ZoomApproachesHome extends StatelessWidget {
       backgroundColor: const Color(0xFF0B0B0B),
       appBar: AppBar(
         backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
           'Pinch-zoom approaches',
-          style: TextStyle(fontWeight: FontWeight.w700),
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       body: ListView.separated(
