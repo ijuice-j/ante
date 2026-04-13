@@ -8,6 +8,7 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
 import 'package:photo_manager/photo_manager.dart';
 
+import '../../../../core/widgets/asterisk_loader.dart';
 import '../../domain/entities/photo.dart';
 import '../providers/gallery_providers.dart';
 import 'photo_viewer_page.dart';
@@ -440,8 +441,9 @@ class _ZoomTestPage4State extends ConsumerState<ZoomTestPage4>
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        foregroundColor: Colors.black,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -452,7 +454,7 @@ class _ZoomTestPage4State extends ConsumerState<ZoomTestPage4>
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: Colors.black,
+                color: Colors.white,
               ),
             ),
             Text(
@@ -460,7 +462,7 @@ class _ZoomTestPage4State extends ConsumerState<ZoomTestPage4>
                   ? 'Loading photos…'
                   : 'N=$_visibleN  photos=${_photos.length}  '
                       '×${_scale.toStringAsFixed(2)}',
-              style: const TextStyle(fontSize: 11, color: Colors.black54),
+              style: const TextStyle(fontSize: 11, color: Colors.white54),
             ),
           ],
         ),
@@ -476,7 +478,7 @@ class _ZoomTestPage4State extends ConsumerState<ZoomTestPage4>
     switch (permission) {
       case PermissionStatus.unknown:
         return const Center(
-          child: CircularProgressIndicator(color: Colors.black54),
+          child: AsteriskLoader(width: 40, height: 40),
         );
       case PermissionStatus.denied:
         return _buildPermissionDenied();
@@ -487,7 +489,7 @@ class _ZoomTestPage4State extends ConsumerState<ZoomTestPage4>
 
     return photosAsync.when(
       loading: () => const Center(
-        child: CircularProgressIndicator(color: Colors.black54),
+        child: AsteriskLoader(width: 40, height: 40),
       ),
       error: (e, _) => Center(
         child: Padding(

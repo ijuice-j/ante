@@ -75,10 +75,13 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/dev-note',
       name: 'dev-note',
-      pageBuilder: (context, state) => _slidePage(
-        const DevNoteScreen(),
-        key: state.pageKey,
-      ),
+      pageBuilder: (context, state) {
+        final readOnly = (state.extra as bool?) ?? false;
+        return _slidePage(
+          DevNoteScreen(readOnly: readOnly),
+          key: state.pageKey,
+        );
+      },
     ),
     GoRoute(
       path: '/asking-permission',
