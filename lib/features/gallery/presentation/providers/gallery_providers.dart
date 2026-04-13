@@ -50,6 +50,7 @@ class PhotosNotifier extends Notifier<AsyncValue<List<Photo>>> {
   int _currentPage = 0;
   bool _hasMore = true;
   bool _isLoadingMore = false;
+  bool _initialLoadTriggered = false;
 
   @override
   AsyncValue<List<Photo>> build() => const AsyncValue.loading();
@@ -59,7 +60,12 @@ class PhotosNotifier extends Notifier<AsyncValue<List<Photo>>> {
   bool get hasMore => _hasMore;
   bool get isLoadingMore => _isLoadingMore;
 
+  /// Idempotent — calling this multiple times only triggers the fetch
+  /// once. Resets on error so the caller can retry.
   Future<void> loadInitial() async {
+    if (_initialLoadTriggered) return;
+    _initialLoadTriggered = true;
+
     state = const AsyncValue.loading();
     _currentPage = 0;
     _hasMore = true;
@@ -69,6 +75,7 @@ class PhotosNotifier extends Notifier<AsyncValue<List<Photo>>> {
       state = AsyncValue.data(photos);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
+      _initialLoadTriggered = false;
     }
   }
 

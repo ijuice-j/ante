@@ -4,10 +4,12 @@ import 'dart:ui';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 import '../../domain/entities/photo.dart';
 import '../providers/gallery_providers.dart';
+import 'photo_viewer_page.dart';
 
 // ---------------------------------------------------------------------------
 // APPROACH 3: single persistent 7-col canvas, variable content mapping.
@@ -51,7 +53,11 @@ class _PinchRecognizer extends ScaleGestureRecognizer {
 // ---------------------------------------------------------------------------
 
 class ZoomTestPage3 extends ConsumerStatefulWidget {
-  const ZoomTestPage3({super.key});
+  /// When true, the widget returns just the grid body — no Scaffold or
+  /// AppBar — so it can be embedded inside another screen (e.g. Home).
+  final bool embedded;
+
+  const ZoomTestPage3({super.key, this.embedded = false});
 
   @override
   ConsumerState<ZoomTestPage3> createState() => _ZoomTestPage3State();
@@ -117,9 +123,18 @@ class _ZoomTestPage3State extends ConsumerState<ZoomTestPage3>
       duration: const Duration(milliseconds: 500),
     )..addListener(_onSnapTick);
 
-    // Kick off permission request on the next frame.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(permissionStatusProvider.notifier).requestPermission();
+    // Kick off permission request on the next frame. If permission is
+    // already granted, also trigger the initial photo load — the
+    // ref.listen below only fires on transitions, which won't happen if
+    // the Launch screen already handled the grant.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await ref.read(permissionStatusProvider.notifier).requestPermission();
+      if (!mounted) return;
+      final status = ref.read(permissionStatusProvider);
+      if (status == PermissionStatus.granted ||
+          status == PermissionStatus.limited) {
+        ref.read(photosProvider.notifier).loadInitial();
+      }
     });
   }
 
@@ -254,6 +269,13 @@ class _ZoomTestPage3State extends ConsumerState<ZoomTestPage3>
   void _onScaleUpdate(ScaleUpdateDetails details) {
     _focalPoint = details.localFocalPoint;
     final raw = _gestureBaseScale * details.scale;
+
+    // Already at max zoom-out (7 cols visible) — block pinch-out entirely.
+    // Don't even update alignment, so the grid doesn't shift at all.
+    if (_visibleN >= _maxVisible && raw <= 1.0) {
+      return;
+    }
+
     final clamped = raw.clamp(
       _cols / _maxVisible,
       _cols / _minVisible,
@@ -270,6 +292,13 @@ class _ZoomTestPage3State extends ConsumerState<ZoomTestPage3>
   }
 
   void _onScaleEnd(ScaleEndDetails details) {
+    // If the user never actually changed anything (e.g. pinched-out at
+    // 7-cols, which is blocked), skip the snap animation entirely.
+    if (_visibleN >= _maxVisible && _scale <= 1.0 + 0.001) {
+      _isGesturing = false;
+      return;
+    }
+
     // Recompute focus tile from the final focal point.
     _focusTileIndex = _tileAtFocal();
 
@@ -343,6 +372,12 @@ class _ZoomTestPage3State extends ConsumerState<ZoomTestPage3>
       }
     });
 
+    final body = _buildBody(permissionStatus, photosAsync);
+
+    if (widget.embedded) {
+      return ColoredBox(color: Colors.white, child: body);
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -372,7 +407,7 @@ class _ZoomTestPage3State extends ConsumerState<ZoomTestPage3>
         backgroundColor: Colors.white,
         elevation: 0,
       ),
-      body: _buildBody(permissionStatus, photosAsync),
+      body: body,
     );
   }
 
@@ -539,7 +574,17 @@ class _ZoomTestPage3State extends ConsumerState<ZoomTestPage3>
                               : 1.0;
                           return Opacity(
                             opacity: opacity,
-                            child: _PhotoTile(photo: photos[item]),
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () => context.push(
+                                '/viewer',
+                                extra: PhotoViewerArgs(
+                                  photos: photos,
+                                  initialIndex: item,
+                                ),
+                              ),
+                              child: _PhotoTile(photo: photos[item]),
+                            ),
                           );
                         },
                         childCount: _childCount,

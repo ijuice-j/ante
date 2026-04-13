@@ -5,10 +5,12 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:go_router/go_router.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 import '../../domain/entities/photo.dart';
 import '../providers/gallery_providers.dart';
+import 'photo_viewer_page.dart';
 
 // ---------------------------------------------------------------------------
 // APPROACH 4: masonry layout, aspect-ratio tiles, dynamic column count.
@@ -83,7 +85,11 @@ class _Layout {
 // ---------------------------------------------------------------------------
 
 class ZoomTestPage4 extends ConsumerStatefulWidget {
-  const ZoomTestPage4({super.key});
+  /// When true, the widget returns just the grid body — no Scaffold or
+  /// AppBar — so it can be embedded inside another screen (e.g. Home).
+  final bool embedded;
+
+  const ZoomTestPage4({super.key, this.embedded = false});
 
   @override
   ConsumerState<ZoomTestPage4> createState() => _ZoomTestPage4State();
@@ -135,8 +141,15 @@ class _ZoomTestPage4State extends ConsumerState<ZoomTestPage4>
       duration: const Duration(milliseconds: 500),
     )..addListener(_onSnapTick);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(permissionStatusProvider.notifier).requestPermission();
+    // Kick off permission request + initial photo load on the next frame.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await ref.read(permissionStatusProvider.notifier).requestPermission();
+      if (!mounted) return;
+      final status = ref.read(permissionStatusProvider);
+      if (status == PermissionStatus.granted ||
+          status == PermissionStatus.limited) {
+        ref.read(photosProvider.notifier).loadInitial();
+      }
     });
   }
 
@@ -309,6 +322,12 @@ class _ZoomTestPage4State extends ConsumerState<ZoomTestPage4>
     if (size == null || size.width <= 0 || size.height <= 0) return;
 
     final raw = _gestureBaseScale * details.scale;
+
+    // Already at max zoom-out (7 cols visible) — block pinch-out entirely.
+    if (_visibleN >= _maxVisible && raw <= 1.0) {
+      return;
+    }
+
     // Clamp so the effective col count stays within the checkpoint range.
     final minScale = _visibleN / _maxVisible.toDouble();
     final maxScale = _visibleN / _minVisible.toDouble();
@@ -324,6 +343,12 @@ class _ZoomTestPage4State extends ConsumerState<ZoomTestPage4>
   }
 
   void _onScaleEnd(ScaleEndDetails details) {
+    // If the user never actually changed anything (e.g. pinched-out at
+    // 7-cols, which is blocked), skip the snap animation entirely.
+    if (_visibleN >= _maxVisible && _scale <= 1.0 + 0.001) {
+      return;
+    }
+
     // Re-read the focus photo in case the fingers drifted.
     _focusPhotoIndex = _photoAtFocal();
 
@@ -406,6 +431,12 @@ class _ZoomTestPage4State extends ConsumerState<ZoomTestPage4>
       }
     });
 
+    final body = _buildBody(permission, photosAsync);
+
+    if (widget.embedded) {
+      return ColoredBox(color: Colors.white, child: body);
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -434,7 +465,7 @@ class _ZoomTestPage4State extends ConsumerState<ZoomTestPage4>
           ],
         ),
       ),
-      body: _buildBody(permission, photosAsync),
+      body: body,
     );
   }
 
@@ -584,7 +615,17 @@ class _ZoomTestPage4State extends ConsumerState<ZoomTestPage4>
 
                     return AspectRatio(
                       aspectRatio: aspect,
-                      child: _PhotoTile(photo: photo),
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => context.push(
+                          '/viewer',
+                          extra: PhotoViewerArgs(
+                            photos: photos,
+                            initialIndex: index,
+                          ),
+                        ),
+                        child: _PhotoTile(photo: photo),
+                      ),
                     );
                   },
                 ),

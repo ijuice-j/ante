@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../core/theme/app_theme.dart';
 import 'router.dart';
 
 class App extends StatelessWidget {
@@ -9,20 +8,45 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Force dark status bar icons for dark theme
+    // Light app — dark status bar icons on a white background.
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
-        statusBarBrightness: Brightness.dark,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: AppTheme.scaffoldDark,
-        systemNavigationBarIconBrightness: Brightness.light,
+        statusBarColor: Colors.transparent,
+        statusBarBrightness: Brightness.light,
+        statusBarIconBrightness: Brightness.dark,
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
       ),
     );
 
     return MaterialApp.router(
-      title: 'Gallery',
+      title: 'ante',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
+      theme: ThemeData(
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: Colors.white,
+        canvasColor: Colors.white,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.black,
+          brightness: Brightness.light,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          elevation: 0,
+          surfaceTintColor: Colors.white,
+          systemOverlayStyle: SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Brightness.dark,
+            statusBarBrightness: Brightness.light,
+          ),
+        ),
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(color: Colors.black),
+          bodyMedium: TextStyle(color: Colors.black),
+          titleLarge: TextStyle(color: Colors.black),
+        ),
+      ),
       routerConfig: appRouter,
     );
   }
