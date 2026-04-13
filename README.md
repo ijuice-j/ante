@@ -1,42 +1,75 @@
+<div align="center">
+
+<img src=".github/assets/img_hero.png" width="400"/>
+
+A Flutter sandbox exploring pinch-to-zoom on a photo grid.
+
+</div>
+
 # ante
 
-A Flutter sandbox exploring pinch-to-zoom behaviours on a photo grid.
+**ante** is a small Flutter app built as a take-home exploration of
+pinch-to-zoom interactions on a photo gallery. The goal was to land on a
+zoom-out/zoom-in behaviour that feels as close as possible to what you get in
+Google Photos, where the grid fluidly redistributes tiles across column counts
+while the photo under your fingers stays locked in place.
 
-Four different approaches are implemented side-by-side, each on its own
-route, so they can be compared:
+This repo is the result of a week of iteration, many rewrites, and a fair
+amount of fighting Flutter's gesture system. Claude Code was my co-engineer on
+this one.
 
-1. **Stacked N-col overlay** (`/zoom-test`) — A fixed 7-col base grid is always
-   mounted. On release, a real N-col overlay is mounted on top, scrolled so the
-   focus tile lines up with the user's fingers. New gestures dispose the overlay
-   and land on the base at a matching scale, so zooming out feels continuous.
-2. **Fixed 7-col canvas, checkpoint lock** (`/zoom-test-2`) — A single 7×20
-   grid that's purely scaled by `Transform.scale`. On release it snaps to one
-   of six checkpoints (7/6/5/4/3/2 visible cols) with the alignment chosen so
-   exactly N complete tiles fit the viewport. Non-focus rows fade during the
-   snap and tile labels are re-mapped so rows read continuously around the
-   focus row.
-3. **7-col canvas, variable fill** (`/zoom-test-3`) — One persistent `SliverGrid`
-   with `crossAxisCount = 7`. A slot → item mapping fills only a contiguous
-   N-column strip; the rest of the canvas renders as empty cells (grey
-   placeholders while zooming, transparent at rest). Uses real photos from the
-   device library.
-4. **Dynamic masonry** (`/zoom-test-4`) — Masonry layout with aspect-ratio
-   tiles. Each zoom level has its own pre-computed layout: 140 photos flow
-   into N columns packed into the shortest column by tile height. On release
-   the grid rebuilds with the new column count and the scroll jumps so the
-   focus photo stays put. Uses real photos.
+<br />
+
+## Onboarding & UX
+
+The flow a first-time user sees:
+
+1. **Native splash**: yellow `#FFEA00`, mascot centered.
+2. **Flutter splash**: mascot fades in over 600ms while Poppins fonts preload
+   in the background. A hard 1.4s minimum timer runs so there's no flicker.
+3. **Dev note**: a short write-up explaining what this app is and how to
+   toggle the masonry layout. Shown exactly once; the flag is persisted in
+   `SharedPreferences`. Two CTAs ("Cool mahn" / "Stfu and let me see the
+   app!") both advance to the permission message, picking one of two copy
+   variants.
+4. **Custom permission message**: "cool, first let me access the photos on
+   your device" in big Gilroy Bold, held on screen for a hard 2 seconds before
+   the system permission dialog fires.
+5. **Home**: the grid, with a welcome app bar and a gear icon that opens
+   Settings.
+
+Settings hosts the masonry toggle, external links (GitHub, Figma, dev note in
+read-only mode, report bug), and a hidden developer-mode easter egg: **tap the
+build version seven times within three seconds** and a "See Dev Pages" shortcut
+appears. The flag is session-only, so it resets on the next cold start.
+
+<br />
+
+## Stack
+
+- **Flutter** 3.41 / **Dart** 3.11
+- **Riverpod** for state management
+- **GoRouter** for routing, with slide-from-right transitions on every route
+- **photo_manager** for device photo access
+- **photo_view** for pinch/zoom inside the single-photo viewer
+- **flutter_staggered_grid_view** for the masonry layout
+- **google_fonts** (Poppins, downloaded) + bundled **Gilroy**
+- **flutter_svg** for icons and mascots
+- **package_info_plus** + **url_launcher** for settings footer and external
+  links
+
+<br />
 
 ## Architecture
 
-Feature-first with `data` / `domain` / `presentation` layers under
-`lib/features/gallery`. State management is Riverpod, routing is GoRouter,
-photo access uses `photo_manager`.
+Feature-first, with `data` / `domain` / `presentation` layers under
+`lib/features/gallery`.
 
 ```
 lib/
 ├── app/                        # App shell, router, theme
 ├── core/
-│   └── theme/
+│   └── widgets/                # AsteriskLoader and other shared widgets
 └── features/gallery/
     ├── data/                   # datasources + repository impl
     ├── domain/                 # entities + repository interface
@@ -46,6 +79,8 @@ lib/
         └── widgets/
 ```
 
+<br />
+
 ## Running
 
 ```bash
@@ -53,7 +88,25 @@ flutter pub get
 flutter run
 ```
 
-The app opens on a landing page listing the four approaches; tap one to try it.
+Grant photo library access when prompted so the gallery can load real photos
+from your device.
 
-Grant photo library access when prompted (approaches 3 and 4 display real
-photos; approaches 1 and 2 use numbered colored tiles for testing).
+<br />
+
+## Links
+
+Every external link below is also wired up inside the app's Settings screen.
+
+- **Design** → [Figma file](https://www.figma.com/design/J4atT9PRRFqufbuR5J4GtI/ante?node-id=1-106)
+- **Bugs / feedback** → `ijasahammedj@gmail.com`
+
+<br />
+
+---
+
+<div align="center">
+
+Built by Ijas as a take-home for [Ente](https://ente.com). Thank you for
+considering me.
+
+</div>
